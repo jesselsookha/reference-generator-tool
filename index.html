@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IIE Reference List Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #344164;
+            --secondary: #F4DEC7;
+            --accent: #F8C74E;
+            --alert: #E93F3F;
+            --muted: #5F6B53;
+            --bg-light: #fafafa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Fira Sans', sans-serif;
+            background: linear-gradient(135deg, var(--bg-light) 0%, var(--secondary) 100%);
+            color: var(--primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.2em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            font-weight: 300;
+            opacity: 0.9;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .sidebar h2 {
+            color: var(--primary);
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .reference-types {
+            list-style: none;
+        }
+
+        .reference-types li {
+            margin-bottom: 8px;
+        }
+
+        .reference-types button {
+            width: 100%;
+            text-align: left;
+            padding: 12px 16px;
+            background: var(--bg-light);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Fira Sans', sans-serif;
+            font-size: 0.95em;
+            font-weight: 500;
+            color: var(--primary);
+        }
+
+        .reference-types button:hover {
+            background: var(--secondary);
+            border-color: var(--accent);
+        }
+
+        .reference-types button.active {
+            background: var(--accent);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .hints-toggle {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px solid var(--secondary);
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .toggle-switch input {
+            width: 50px;
+            height: 26px;
+            position: relative;
+            appearance: none;
+            background: #ccc;
+            border-radius: 13px;
+            outline: none;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .toggle-switch input:checked {
+            background: var(--accent);
+        }
+
+        .toggle-switch input::before {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            background: white;
+            transition: 0.3s;
+        }
+
+        .toggle-switch input:checked::before {
+            left: 26px;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .form-section, .output-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .form-section h2, .output-section h2 {
+            color: var(--primary);
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .required {
+            color: var(--alert);
+        }
+
+        .hint {
+            font-size: 0.85em;
+            color: var(--muted);
+            font-weight: 400;
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        .form-group input, .form-group select {
+            padding: 12px;
+            border: 2px solid var(--secondary);
+            border-radius: 8px;
+            font-family: 'Fira Sans', sans-serif;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-group input.error {
+            border-color: var(--alert);
+        }
+
+        .error-message {
+            color: var(--alert);
+            font-size: 0.85em;
+            margin-top: 4px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Fira Sans', sans-serif;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            background: #e6b938;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .btn-secondary {
+            background: var(--muted);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4a5442;
+        }
+
+        .reference-list {
+            margin-top: 20px;
+        }
+
+        .reference-item {
+            background: var(--bg-light);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            border-left: 4px solid var(--accent);
+        }
+
+        .reference-text {
+            flex: 1;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .reference-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: 15px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.85em;
+            border-radius: 6px;
+        }
+
+        .btn-danger {
+            background: var(--alert);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--muted);
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .output-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid var(--secondary);
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+
+        .tooltip-icon {
+            width: 16px;
+            height: 16px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .tooltip-text {
+            visibility: hidden;
+            width: 250px;
+            background-color: var(--primary);
+            color: white;
+            text-align: left;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -125px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.85em;
+            font-weight: 400;
+        }
+
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                position: relative;
+                top: 0;
+            }
+        }
+
+        .info-banner {
+            background: var(--secondary);
+            border-left: 4px solid var(--accent);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>IIE Reference List Generator</h1>
+        <p>Harvard-Anglia Style (IIE Adapted)</p>
+    </header>
+
+    <div class="container">
+        <div class="main-layout">
+            <aside class="sidebar">
+                <h2>Reference Types</h2>
+                <ul class="reference-types" id="referenceTypes">
+                    <li><button data-type="book-one">Book (one author)</button></li>
+                    <li><button data-type="book-multiple">Book (2-3 authors)</button></li>
+                    <li><button data-type="book-four-plus">Book (4+ authors)</button></li>
+                    <li><button data-type="journal">Journal Article</button></li>
+                    <li><button data-type="journal-online">Journal Article (online)</button></li>
+                    <li><button data-type="website">Website</button></li>
+                    <li><button data-type="chapter">Chapter (edited book)</button></li>
+                    <li><button data-type="ebook">eBook</button></li>
+                </ul>
+
+                <div class="hints-toggle">
+                    <label class="toggle-switch">
+                        <span style="font-weight: 500;">Show Hints</span>
+                        <input type="checkbox" id="hintsToggle" checked>
+                    </label>
+                </div>
+            </aside>
+
+            <main class="main-content">
+                <section class="form-section">
+                    <h2 id="formTitle">Select a Reference Type</h2>
+                    <div class="info-banner" id="infoBanner" style="display: none;"></div>
+                    <form id="referenceForm" style="display: none;">
+                        <div class="form-grid" id="formFields"></div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Add Reference</button>
+                            <button type="button" class="btn btn-secondary" id="clearForm">Clear Form</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="output-section">
+                    <h2>Your Reference List (<span id="refCount">0</span>)</h2>
+                    <div id="referenceList" class="reference-list">
+                        <div class="empty-state">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            <p>No references added yet. Select a reference type and fill in the form to get started.</p>
+                        </div>
+                    </div>
+                    <div class="output-actions" id="outputActions" style="display: none;">
+                        <button class="btn btn-primary" id="copyAll">Copy All References</button>
+                        <button class="btn btn-secondary" id="downloadTxt">Download as .txt</button>
+                        <button class="btn btn-danger" id="clearAll">Clear All</button>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let references = [];
+        let showHints = true;
+        let currentType = null;
+
+        // Form templates
+        const formTemplates = {
+            'book-one': {
+                title: 'Book (One Author)',
+                info: 'For a book written by a single author.',
+                fields: [
+                    { name: 'surname', label: 'Author Surname', required: true, hint: 'e.g., Hüther' },
+                    { name: 'initials', label: 'Author Initials', required: true, hint: 'e.g., G.' },
+                    { name: 'year', label: 'Year', required: true, hint: 'e.g., 2006', tooltip: 'Use [s.a.] if year unavailable' },
+                    { name: 'title', label: 'Book Title', required: true, hint: 'e.g., The compassionate brain: How empathy creates intelligence' },
+                    { name: 'edition', label: 'Edition', required: false, hint: 'e.g., 2 (only if not first edition)' },
+                    { name: 'city', label: 'City of Publication', required: true, hint: 'e.g., Boston', tooltip: 'Use [s.l.] if place unavailable' },
+                    { name: 'publisher', label: 'Publisher', required: true, hint: 'e.g., Trumpeter', tooltip: 'Use [s.n.] if publisher unavailable' }
+                ],
+                format: (data) => {
+                    const edition = data.edition ? `${data.edition}<sup>${getOrdinal(data.edition)}</sup> ed. ` : '';
+                    return `${data.surname}, ${data.initials}, ${data.year}. <em>${data.title}</em>. ${edition}${data.city}: ${data.publisher}.`;
+                }
+            },
+            'book-multiple': {
+                title: 'Book (2-3 Authors)',
+                info: 'For a book written by two or three authors.',
+                fields: [
+                    { name: 'author1_surname', label: 'First Author Surname', required: true, hint: 'e.g., Strunk' },
+                    { name: 'author1_initials', label: 'First Author Initials', required: true, hint: 'e.g., W.' },
+                    { name: 'author2_surname', label: 'Second Author Surname', required: true, hint: 'e.g., White' },
+                    { name: 'author2_initials', label: 'Second Author Initials', required: true, hint: 'e.g., E.B.' },
+                    { name: 'author3_surname', label: 'Third Author Surname', required: false, hint: 'Leave blank if only 2 authors' },
+                    { name: 'author3_initials', label: 'Third Author Initials', required: false, hint: 'Leave blank if only 2 authors' },
+                    { name: 'year', label: 'Year', required: true, hint: 'e.g., 2023' },
+                    { name: 'title', label: 'Book Title', required: true, hint: 'e.g., The elements of style' },
+                    { name: 'edition', label: 'Edition', required: false, hint: 'e.g., 4' },
+                    { name: 'city', label: 'City of Publication', required: true, hint: 'e.g., Massachusetts' },
+                    { name: 'publisher', label: 'Publisher', required: true, hint: 'e.g., Allan and Bacon' }
+                ],
+                format: (data) => {
+                    let authors = `${data.author1_surname}, ${data.author1_initials} and ${data.author2_surname}, ${data.author2_initials}`;
+                    if (data.author3_surname && data.author3_initials) {
+                        authors += ` and ${data.author3_surname}, ${data.author3_initials}`;
+                    }
+                    const edition = data.edition ? `${data.edition}<sup>${getOrdinal(data.edition)}</sup> ed. ` : '';
+                    return `${authors}, ${data.year}. <em>${data.title}</em>. ${edition}${data.city}: ${data.publisher}.`;
+                }
+            },
+            'book-four-plus': {
+                title: 'Book (4+ Authors)',
+                info: 'For a book written by four or more authors (use et al. in citations).',
+                fields: [
+                    { name: 'author1_surname', label: 'First Author Surname', required: true, hint: 'e.g., Green' },
+                    { name: 'author1_initials', label: 'First Author Initials', required: true, hint: 'e.g., G.' },
+                    { name: 'author2_surname', label: 'Second Author Surname', required: true, hint: 'e.g., Pecar' },
+                    { name: 'author2_initials', label: 'Second Author Initials', required: true, hint: 'e.g., B.' },
+                    { name: 'author3_surname', label: 'Third Author Surname', required: true, hint: 'e.g., Santana' },
+                    { name: 'author3_initials', label: 'Third Author Initials', required: true, hint: 'e.g., L.' },
+                    { name: 'author4_surname', label: 'Fourth Author Surname', required: true, hint: 'e.g., Burke' },
+                    { name: 'author4_initials', label: 'Fourth Author Initials', required: true, hint: 'e.g., A.' },
+                    { name: 'additional_authors', label: 'Additional Authors', required: false, hint: 'If more than 4, list remaining authors in same format' },
+                    { name: 'year', label: 'Year', required: true, hint: 'e.g., 2014' },
+                    { name: 'title', label: 'Book Title', required: true, hint: 'e.g., Statistics for the social sciences' },
+                    { name: 'edition', label: 'Edition', required: false, hint: 'e.g., 2' },
+                    { name: 'city', label: 'City of Publication', required: true, hint: 'e.g., Cape Town' },
+                    { name: 'publisher', label: 'Publisher', required: true, hint: 'e.g., Oxford University Press' }
+                ],
+                format: (data) => {
+                    let authors = `${data.author1_surname}, ${data.author1_initials}, ${data.author2_surname}, ${data.author2_initials}, ${data.author3_surname}, ${data.author3_initials} and ${data.author4_surname}, ${data.author4_initials}`;
+                    if (data.additional_authors) {
+                        authors += `, ${data.additional_authors}`;
+                    }
+                    const edition = data.edition ? `${data.edition}<sup>${getOrdinal(data.edition)}</sup> ed. ` : '';
+                    return `${authors}, ${data.year}. <em>${data.title}</em>. ${edition}${data.city}: ${data.publisher}.`;
+                }
+            },
+            'journal': {
+                title: 'Journal Article',
+                info: 'For a printed journal article.',
+                fields: [
+                    { name: 'surname', label: 'Author Surname', required: true, hint: 'e.g., Spaull' },
+                    { name: 'initials', label: 'Author Initials', required: true, hint: 'e.g., N.' },
+                    { name: 'year', label: 'Year', required: true, hint: 'e.g., 2013' },
+                    { name: 'article_title', label: 'Article Title', required: true, hint: 'e.g., Poverty and privilege: Primary school inequality' },
+                    { name: 'journal_title', label: 'Journal Title', required: true, hint: 'e.g., International Journal of Educational Development' },
+                    { name: 'volume', label: 'Volume', required: true, hint: 'e.g., 33' },
+                    { name: 'issue', label: 'Issue', required: true, hint: 'e.g., 2' },
+                    { name: 'pages', label: 'Page Numbers', required: true, hint: 'e.g., 436-447' }
+                ],
+                format: (data) => {
+                    return `${data.surname}, ${data.initials}, ${data.year}. ${data.article_title}. <em>${data.journal_title}</em>, ${data.volume}(${data.issue}), pp.${data.pages}.`;
+                }
+            },
+            'journal-online': {
+                title: 'Journal Article (Online)',
+                info: 'For a journal article obtained from an online database.',
+                fields: [
+                    { name: 'surname', label: 'Author Surname', required: true, hint: 'e.g., Barker' },
+                    { name: 'initials', label: 'Author Initials', required: true, hint: 'e.g., R.' },
+                    { name: 'year', label: 'Year', required: true, hint: 'e.g., 2009' },
+                    { name: 'article_title', label: 'Article Title', required: true, hint: 'e.g., A qualitative thematic analysis' },
+                    { name: 'journal_title', label: 'Journal Title', required: true, hint: 'e.g., Journal of Qualitative Research' },
+                    { name: 'volume', label: 'Volume', required: true, hint: 'e.g., 42' },
+                    { name: 'issue', label: 'Issue', required: true, hint: 'e.g., 1' },
+                    { name: 'pages', label: 'Page Numbers', required: true, hint: 'e.g., 7-14' },
+                    { name: 'url', label: 'URL', required: true, hint: 'Paste the permalink/DOI URL' },
+                    { name: 'access_date', label: 'Access Date', required: true, hint: 'e.g., 22 July 2023' }
+                ],
+                format: (data) => {
+                    return `${data.surname}, ${data.initials}, ${data.year}. ${data.article_title}. <em>${data.journal_title}</em>, [e-journal] ${data.volume}(${data.issue}), pp.${data.pages}. Available at: &lt;${data.url}&gt; [Accessed ${data.access_date}].`;
+                }
+            },
+            'website': {
+                title: 'Website',
+                info: 'For content from a website.',
+                fields: [
+                    { name: 'author', label: 'Author/Organization', required: true, hint: 'e.g., World Health Organisation' },
+                    { name: 'year', label: 'Year', required: true, hint: 'e.g., 2015' },
+                    { name: 'title', label: 'Page Title', required: true, hint: 'e.g., WHO calls on countries to protect health' },
+                    { name: 'url', label: 'URL', required: true, hint: 'Paste the full URL' },
+                    { name: 'access_date', label: 'Access Date', required: true, hint: 'e.g., 20 November 2015' }
+                ],
+                format: (data) => {
+                    return `${data.author}, ${data.year}. ${data.title}. [online] Available at: &lt;${data.url}&gt; [Accessed ${data.access_date}].`;
+                }
+            },
+            'chapter': {
+                title: 'Chapter from Edited Book',
+                info: 'For a chapter within an edited book.',
+                fields: [
+                    { name: 'chapter_author_surname', label: 'Chapter Author Surname', required: true, hint: 'e.g., Davis' },
+                    { name: 'chapter_author_initials', label: 'Chapter Author Initials', required: true, hint: 'e.g., C.' },
+                    { name: 'year', label: 'Year', required: true, hint: 'e.g., 2014' },
+                    { name: 'chapter_title', label: 'Chapter Title', required: true, hint: 'e.g., The aims of research' },
+                    { name: 'editor_initials', label: 'Editor Initials', required: true, hint: 'e.g., F.' },
+                    { name: 'editor_surname', label: 'Editor Surname', required: true, hint: 'e.g., du Plooy-Cilliers' },
+                    { name: 'additional_editors', label: 'Additional Editors', required: false, hint: 'e.g., C. Davis and R.M. Bezuidenhout' },
+                    { name: 'book_title', label: 'Book Title', required: true, hint: 'e.g., Research matters' },
+                    { name: 'city', label: 'City of Publication', required: true, hint: 'e.g., Claremont' },
+                    { name: 'publisher', label: 'Publisher', required: true, hint: 'e.g., Juta' },
+                    { name: 'chapter_number', label: 'Chapter Number', required: false, hint: 'e.g., 5' },
+                    { name: 'pages', label: 'Page Numbers', required: true, hint: 'e.g., 72-81' }
+                ],
+                format: (data) => {
+                    const editors = data.additional_editors 
+                        ? `${data.editor_initials} ${data.editor_surname}, ${data.additional_editors}, eds.`
+                        : `${data.editor_initials} ${data.editor_surname}, ed.`;
+                    const chapter = data.chapter_number ? `Chapter ${data.chapter_number}: ` : '';
+                    return `${data.chapter_author_surname}, ${data.chapter_author_initials}, ${data.year}. ${data.chapter_title}. In: ${editors} <em>${data.book_title}</em>. ${data.city}: ${data.publisher}, ${chapter}pp.${data.pages}.`;
+                }
+            },
+            'ebook': {
+                title: 'eBook',
+                info: 'For an electronic book accessed online.',
+                fields: [
+                    { name: 'surname', label: 'Author Surname', required: true, hint: 'e.g., Cox' },
+                    { name: 'initials', label: 'Author Initials', required: true, hint: 'e.g., A.' },
+                    { name: 'year', label: 'Year', required: true, hint: 'e.g., 2008' },
+                    { name: 'title', label: 'Book Title', required: true, hint: 'e.g., The short story' },
+                    { name: 'city', label: 'City of Publication', required: true, hint: 'e.g., Newcastle' },
+                    { name: 'publisher', label: 'Publisher', required: true, hint: 'e.g., Cambridge Scholars Publishing' },
+                    { name: 'url', label: 'URL', required: true, hint: 'Paste the permalink' },
+                    { name: 'access_date', label: 'Access Date', required: true, hint: 'e.g., 31 October 2017' }
+                ],
+                format: (data) => {
+                    return `${data.surname}, ${data.initials}, ${data.year}. ${data.title}. [e-book] ${data.city}: ${data.publisher}. Available at: &lt;${data.url}&gt; [Accessed ${data.access_date}].`;
+                }
+            }
+        };
+
+        // Helper functions
+        function getOrdinal(num) {
+            const ordinals = ['th', 'st', 'nd', 'rd'];
+            const v = num % 100;
+            return ordinals[(v - 20) % 10] || ordinals[v] || ordinals[0];
+        }
+
+        function sanitizeInput(str) {
+            return str.trim().replace(/\s+/g, ' ');
+        }
+
+        function handleMissingInfo(value, type) {
+            if (!value || value.trim() === '') {
+                switch(type) {
+                    case 'year': return '[s.a.]';
+                    case 'city': return '[s.l.]';
+                    case 'publisher': return '[s.n.]';
+                    default: return '';
+                }
+            }
+            return sanitizeInput(value);
+        }
+
+        // Load references from localStorage
+        function loadReferences() {
+            const stored = localStorage.getItem('iie_references');
+            if (stored) {
+                const data = JSON.parse(stored);
+                const now = Date.now();
+                const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+                
+                // Filter out references older than 30 days
+                references = data.filter(ref => {
+                    return (now - ref.timestamp) < thirtyDays;
+                });
+                
+                saveReferences();
+                renderReferences();
+            }
+        }
+
+        // Save references to localStorage
+        function saveReferences() {
+            localStorage.setItem('iie_references', JSON.stringify(references));
+        }
+
+        // Render the form based on selected type
+        function renderForm(type) {
+            currentType = type;
+            const template = formTemplates[type];
+            
+            document.getElementById('formTitle').textContent = template.title;
+            
+            const infoBanner = document.getElementById('infoBanner');
+            infoBanner.textContent = template.info;
+            infoBanner.style.display = 'block';
+            
+            const formFields = document.getElementById('formFields');
+            formFields.innerHTML = '';
+            
+            template.fields.forEach(field => {
+                const formGroup = document.createElement('div');
+                formGroup.className = 'form-group';
+                
+                const label = document.createElement('label');
+                label.innerHTML = `${field.label}${field.required ? ' <span class="required">*</span>' : ''}`;
+                
+                if (field.tooltip) {
+                    const tooltip = document.createElement('span');
+                    tooltip.className = 'tooltip';
+                    tooltip.innerHTML = `
+                        <span class="tooltip-icon">?</span>
+                        <span class="tooltip-text">${field.tooltip}</span>
+                    `;
+                    label.appendChild(tooltip);
+                }
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.name = field.name;
+                input.required = field.required;
+                
+                if (showHints && field.hint) {
+                    const hint = document.createElement('div');
+                    hint.className = 'hint';
+                    hint.textContent = field.hint;
+                    formGroup.appendChild(label);
+                    formGroup.appendChild(input);
+                    formGroup.appendChild(hint);
+                } else {
+                    formGroup.appendChild(label);
+                    formGroup.appendChild(input);
+                }
+                
+                formFields.appendChild(formGroup);
+            });
+            
+            document.getElementById('referenceForm').style.display = 'block';
+            
+            // Update active button
+            document.querySelectorAll('.reference-types button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-type="${type}"]`).classList.add('active');
+        }
+
+        // Sort references alphabetically by author
+        function sortReferences() {
+            references.sort((a, b) => {
+                const aText = a.text.replace(/<[^>]*>/g, '').toLowerCase();
+                const bText = b.text.replace(/<[^>]*>/g, '').toLowerCase();
+                return aText.localeCompare(bText);
+            });
+        }
+
+        // Render all references
+        function renderReferences() {
+            const container = document.getElementById('referenceList');
+            const count = document.getElementById('refCount');
+            const actions = document.getElementById('outputActions');
+            
+            count.textContent = references.length;
+            
+            if (references.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        <p>No references added yet. Select a reference type and fill in the form to get started.</p>
+                    </div>
+                `;
+                actions.style.display = 'none';
+                return;
+            }
+            
+            sortReferences();
+            
+            container.innerHTML = references.map((ref, index) => `
+                <div class="reference-item">
+                    <div class="reference-text">${ref.text}</div>
+                    <div class="reference-actions">
+                        <button class="btn btn-small btn-danger" onclick="deleteReference(${index})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            actions.style.display = 'flex';
+        }
+
+        // Add reference
+        function addReference(formData) {
+            const template = formTemplates[currentType];
+            
+            // Process form data
+            const processedData = {};
+            for (let [key, value] of formData.entries()) {
+                if (key.includes('year') || key.includes('city') || key.includes('publisher')) {
+                    const type = key.includes('year') ? 'year' : key.includes('city') ? 'city' : 'publisher';
+                    processedData[key] = handleMissingInfo(value, type);
+                } else {
+                    processedData[key] = sanitizeInput(value);
+                }
+            }
+            
+            const formattedText = template.format(processedData);
+            
+            references.push({
+                text: formattedText,
+                type: currentType,
+                timestamp: Date.now()
+            });
+            
+            saveReferences();
+            renderReferences();
+        }
+
+        // Delete reference
+        function deleteReference(index) {
+            if (confirm('Are you sure you want to delete this reference?')) {
+                references.splice(index, 1);
+                saveReferences();
+                renderReferences();
+            }
+        }
+
+        // Copy all references
+        function copyAllReferences() {
+            const container = document.createElement('div');
+            container.innerHTML = references.map(ref => ref.text).join('<br><br>');
+            
+            const range = document.createRange();
+            range.selectNode(container);
+            
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            
+            try {
+                document.execCommand('copy');
+                alert('References copied to clipboard!');
+            } catch (err) {
+                alert('Failed to copy references. Please try again.');
+            }
+            
+            selection.removeAllRanges();
+        }
+
+        // Download as text file
+        function downloadTxtFile() {
+            const plainText = references.map(ref => {
+                return ref.text
+                    .replace(/<em>/g, '')
+                    .replace(/<\/em>/g, '')
+                    .replace(/<sup>/g, '')
+                    .replace(/<\/sup>/g, '')
+                    .replace(/&lt;/g, '<')
+                    .replace(/&gt;/g, '>');
+            }).join('\n\n');
+            
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            const filename = `IIE_References_${timestamp}.txt`;
+            
+            const blob = new Blob([plainText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Clear all references
+        function clearAllReferences() {
+            if (confirm('Are you sure you want to clear all references? This cannot be undone.')) {
+                references = [];
+                saveReferences();
+                renderReferences();
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            loadReferences();
+            
+            // Reference type buttons
+            document.querySelectorAll('.reference-types button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    renderForm(btn.dataset.type);
+                });
+            });
+            
+            // Hints toggle
+            document.getElementById('hintsToggle').addEventListener('change', (e) => {
+                showHints = e.target.checked;
+                if (currentType) {
+                    renderForm(currentType);
+                }
+            });
+            
+            // Form submission
+            document.getElementById('referenceForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                addReference(formData);
+                e.target.reset();
+                
+                // Scroll to reference list
+                document.getElementById('referenceList').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            });
+            
+            // Clear form
+            document.getElementById('clearForm').addEventListener('click', () => {
+                document.getElementById('referenceForm').reset();
+            });
+            
+            // Copy all
+            document.getElementById('copyAll').addEventListener('click', copyAllReferences);
+            
+            // Download
+            document.getElementById('downloadTxt').addEventListener('click', downloadTxtFile);
+            
+            // Clear all
+            document.getElementById('clearAll').addEventListener('click', clearAllReferences);
+        });
+    </script>
+</body>
+</html>
