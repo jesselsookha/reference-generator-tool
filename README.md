@@ -2,6 +2,8 @@
 
 A comprehensive web-based tool for generating academic references in Harvard-Anglia style (adapted format). This tool helps students create properly formatted reference lists for academic assignments and research papers.
 
+🌐 **Live version**: [Click here to use the tool](https://jesselsookha.github.io/reference-generator-tool/)
+
 ## 📚 Features
 
 - **40+ Reference Types**: Comprehensive coverage of academic sources including:
