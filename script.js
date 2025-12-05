@@ -608,6 +608,7 @@ const formTemplates = {
         fields: [
             { name: 'institution', label: 'Institution', required: true, hint: 'e.g., The Independent Institute of Education' },
             { name: 'year', label: 'Year', required: true, hint: 'e.g., 2025' },
+            // Continuing module-guide and adding remaining types...
             { name: 'module_title', label: 'Module Title', required: true, hint: 'e.g., Digital and academic literacies' },
             { name: 'module_code', label: 'Module Code', required: true, hint: 'e.g., DIAL5111' },
             { name: 'source_type', label: 'Source Type', required: true, type: 'select', options: ['print', 'online'], hint: 'Print or online VLE?' },
@@ -771,12 +772,26 @@ function sanitizeInput(str) {
     return str.trim().replace(/\s+/g, ' ');
 }
 
+/*
+ * Stands for: sine anno
+ * Meaning: “without year”
+ * Use: When the publication date is unknown. Example: Smith, J. (s.a.)…
+ * 
+ * Stands for: sine loco
+ * Meaning: “without place” (location)
+ * Use: When the place of publication is unknown. Example: Smith, J. (s.l.)…
+ * 
+ * Stands for: sine nomine
+ * Meaning: “without name”
+ * Use: When the publisher’s name is unknown. Example: Smith, J. (s.l.: s.n.) — meaning no place and no publisher are known.
+ * 
+ */
 function handleMissingInfo(value, type) {
     if (!value || value.trim() === '') {
         switch(type) {
-            case 'year': return '[s.a.]'; //s.a. (sine anno) means "without year" or "no date". This is used when the publication date is not available.
-            case 'city': return '[s.l.]'; //s.l. (sine loco) means "without place" or "no place". This is used when the location of publication is not known.
-            case 'publisher': return '[s.n.]'; //s.n. (sine nomine) means "without name" or "no name". This is used when the name of the publisher (or sometimes the author) is not provided in the source. 
+            case 'year': return '[s.a.]';
+            case 'city': return '[s.l.]';
+            case 'publisher': return '[s.n.]';
             default: return '';
         }
     }
@@ -785,12 +800,15 @@ function handleMissingInfo(value, type) {
 
 // Storage functions
 function loadReferences() {
-    const stored = localStorage.getItem('iie_references'); // retrieve using key value
+    const stored = localStorage.getItem('iie_references'); // using key value 
     if (stored) {
         const data = JSON.parse(stored);
         const now = Date.now();
-        const thirtyDays = 30 * 24 * 60 * 60 * 1000; 
+        const thirtyDays = 30 * 24 * 60 * 60 * 1000; // can change 30 
         
+        /*
+         * Data is currently going to be maintained for 30 days in localStorage
+         */
         references = data.filter(ref => {
             return (now - ref.timestamp) < thirtyDays;
         });
@@ -799,13 +817,9 @@ function loadReferences() {
         renderReferences();
     }
 }
-/*
- * Only going to maintain 30 days worth of data kept in Web Storage API 
- * Purely to not fill up the student's PC with this reference data 
- */
 
 function saveReferences() {
-    localStorage.setItem('iie_references', JSON.stringify(references));
+    localStorage.setItem('iie_references', JSON.stringify(references)); // using key value
 }
 
 // Render sidebar reference types
@@ -1107,6 +1121,3 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('downloadTxt').addEventListener('click', downloadTxtFile);
     document.getElementById('clearAll').addEventListener('click', clearAllReferences);
 });
-};
-
-// Continuing in next part due to length...
